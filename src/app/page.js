@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { Unlock } from "next/font/google";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Home() {
   const [password, setPassword] = useState("");
@@ -9,13 +10,46 @@ export default function Home() {
   const rule_4 = rule_3 && password.length>=20
   const rule_5 = rule_4 && hasNumberEveryFiveChars(password)
   const rule_6 = rule_5 && hasUpperCaseEveryThreeChars(password)
-
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    return () => {
+      if (document.head.contains(link)) {
+        document.head.removeChild(link)
+      };
+    }
+  }, [])
+  const rulesList = useMemo(() => {
+    return [
+      {
+        id: 1,
+        title: "Must include at least one lowercase letter",
+        passed: rule_1,
+        unlocked: true,
+      },
+      {
+        id: 2,
+        title: "Must include at least one number",
+        passed: rule_2,
+        unlocked: rule_1
+      },
+      {
+        id: 3,
+        title: "Must include at least one uppercase letter",
+        passed: rule_3,
+        unlocked: rule_2
+      },
+      {}
+    ]
+  })
   return (
-    <div>
-      <div>
+    <div className="flex flex-col justify-center items-center w-full bg-beige">
+      <div className="flex flex-col">
         <h1>The Password Game</h1>
         <p>Password</p>
-        <input className="w-3xl" placeholder="Enter Your Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input className="w-full" placeholder="Enter Your Password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       {password && <div className="text-red-800">
         {!rule_1 && <div>Must include a lowercase letter</div>}
