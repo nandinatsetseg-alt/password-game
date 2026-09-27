@@ -1,7 +1,7 @@
 "use client";
 import { Unlock } from "next/font/google";
 import { useEffect, useMemo, useState } from "react";
-
+import confetti from "canvas-confetti";
 export default function Home() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(true);
@@ -165,6 +165,16 @@ export default function Home() {
     }
     setPrevPassedCount(passedCount);
    }, [passedCount, password])
+   useEffect(() => {
+    if (passedCount === rulesList.length) {
+      confetti({
+        particleCount:150,
+        spread: 100,
+        origin: { y: 0.6},
+        colors: ['#e6c875', '#2ec4b6', '#e63946', '#ffd166', '#06d6a0']
+      });
+    }
+   }, [passedCount, rulesList.length])
    const currentTheme = themes[Math.min(passedCount, themes.length - 1)];
   return (
     <div className={`flex flex-col justify-start p-4 items-center w-full min-h-screen text-black font-[VT323] sm:p-8 selection:bg-[#e6c875] transition-colors duration-700 ${currentTheme.bg}`}>
