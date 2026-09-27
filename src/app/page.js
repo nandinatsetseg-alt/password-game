@@ -90,6 +90,7 @@ export default function Home() {
     return rulesList.filter((rev) => rev.unlocked).slice().reverse();
   }, [rulesList]);
   const passedCount = rulesList.filter((rev) => rev.passed).length;
+  const progressPercentage = Math.round((passedCount / rulesList.length) * 100);
   const themes = [ 
        {
         bg: "bg-[#f7eed3] text-black selection:bg-[#e6c875]",
@@ -160,7 +161,7 @@ export default function Home() {
     <div className={`flex flex-col justify-start p-4 items-center w-full min-h-screen text-black font-[VT323] sm:p-8 selection:bg-[#e6c875] transition-colors duration-700 ${currentTheme.bg}`}>
       <div className="w-full max-w-xl space-y-5">
         <div className={`border-4 p-5 shadow-[4px_4px_0px_0px_#000] text-center transition-colors duration-500 ${currentTheme.header}`}>
-          <h1 className="font-['Press_Start_2P'] text-lg sm:text-xl text-black uppercase mb-1">
+          <h1 className="font-['Press_Start_2P'] text-lg sm:text-xl uppercase mb-1">
             The Password Game
           </h1>
           <p className="text-xl text-brown-300">Goodluck!</p>
@@ -180,6 +181,16 @@ export default function Home() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <button onClick={() => setShowPassword(!showPassword)} className={`absolute right-2 font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase ${currentTheme.accent}`}>{showPassword ? "HIDE" : "SHOW"}</button>
+          </div>
+          <div className="mt-4">
+              <div className="flex justify-between items-center mb-1 text-xs font-['Press_Start_2P']">
+              <span>Progress</span>
+              <span>{progressPercentage}%</span>
+              </div>
+          </div>
+          <div className="w-full h-4 bg-black/20 border-2 border-black p-0.5 overflow-hidden">
+            <div className={`h-full transition-all duration-500 ${passedCount === rulesList.length ? "bg-green-400 animate-pulse " : currentTheme.accent || "bg-yellow-400"}`} style={{width: `${progressPercentage}%`}}>
+          </div>
           </div>
         </div>
         <div>
