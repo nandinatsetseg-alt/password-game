@@ -7,6 +7,10 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(true);
   const [isShaking, setIsShaking] = useState(false);
   const [prevPassedCount, setPrevPassedCount] = useState(0);
+  const [keystrokes, setKeystrokes ] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [bestScore, setBestScore] = useState(null);
   const rule_1 = /[a-z]/.test(password);
   const rule_2 = rule_1 && /[0-9]/.test(password);
   const rule_3 = rule_2 && /[A-Z]/.test(password);
@@ -28,6 +32,12 @@ export default function Home() {
       "https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap";
     link.rel = "stylesheet";
     document.head.appendChild(link);
+    const savedBest = localStorage.getItem("password_game_best");
+    if (savedBest) {
+      try {
+        setBestScore(JSON.parse(savedBest));
+      } catch (e) {}
+    }
     return () => {
       if (document.head.contains(link)) {
         document.head.removeChild(link);
@@ -158,23 +168,40 @@ export default function Home() {
       },
    ]
    useEffect(() => {
+    let interval;
+    if (gameStarted && passedCount < 8) {
+      interval = setInterval(() => {
+        setSeconds((s) => s + 1);
+      }, 1000)
+    }
+    return () => clearInterval(interval);
+   }, [gameStarted, passedCount])
+   useEffect(() => {
     if (passedCount<prevPassedCount && password.length > 0) {
       setIsShaking(true);
       const timer = setTimeout(() => setIsShaking(false), 300);
       return () => clearTimeout(timer);
     }
     setPrevPassedCount(passedCount);
-   }, [passedCount, password])
+   }, [passedCount, password, prevPassedCount])
    useEffect(() => {
-    if (passedCount === rulesList.length) {
+    if (passedCount === 8) {
       confetti({
         particleCount:150,
         spread: 100,
         origin: { y: 0.6},
         colors: ['#e6c875', '#2ec4b6', '#e63946', '#ffd166', '#06d6a0']
       });
+      const finalTime = Math.max(1, seconds);
+      const newScore = { time: finalTime, keys: keystrokes};
+      const saved = localStorage.getItem("password_game_best");
+      const currentBest = saved ? JSON.parse(saved) : null;
+      if (!currentBest || finalTime < currentBest.time) {
+        localStorage.setItem("password_game_best", JSON.stringify(newScore));
+        setBestScore(newScore);
+      }
     }
-   }, [passedCount, rulesList.length])
+   }, [passedCount, rulesList.length, gameStarted, seconds, keystrokes]);
    const currentTheme = themes[Math.min(passedCount, themes.length - 1)];
   return (
     <div className={`flex flex-col justify-start p-4 items-center w-full min-h-screen text-black font-[VT323] sm:p-8 selection:bg-[#e6c875] transition-colors duration-700 ${currentTheme.bg}`}>
@@ -184,6 +211,11 @@ export default function Home() {
             The Password Game
           </h1>
           <p className="text-xl text-brown-300">Goodluck!</p>
+        </div>
+        <div className={`border-4 p-3 shadow-[4px_4px_0px_0px_#000] flex justify-around text-xs sm:text-sm font-['Press_Start_2P'] ${currentTheme.card}`}>
+          <div>TIME: {seconds}s</div>
+          <div>KEYS: {keystrokes}</div>
+          <div>BEST: {bestScore ? `${bestScore.time}s` : "--"}</div>
         </div>
         <div className={` border-4 p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] transition-colors duration-500 ${currentTheme.card} ${isShaking ? "animate-shake" : ""}`}>
           <div className="flex justify-between items-center mb-2">
@@ -196,9 +228,14 @@ export default function Home() {
               type={showPassword ? "text" : "password"}
               placeholder="Enter Your Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}/>
+              onChange={(e) => {setPassword(e.target.value); 
+                setKeystrokes((k) => k + 1);
+                if (!gameStarted && e.target.value.length > 0) {
+                  setGameStarted(true);}
+                }
+              }/>
               <div className="absolute right-2 flex space-x-1">
-                  <button onClick={() => {setPassword(""); setPrevPassedCount(0);}} className="font-['Press_Start_2P'] text-[9px] bg-red-400 hover:bg-red-300 text-black border-2 border-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase" title="Reset Password">
+                  <button onClick={() => {setPassword(""); setPrevPassedCount(0); setGameStarted(false); setSeconds(0); setKeystrokes(0)}} className="font-['Press_Start_2P'] text-[9px] bg-red-400 hover:bg-red-300 text-black border-2 border-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase" title="Reset Password">
                         RESET
                   </button>
                   <button onClick={() => setShowPassword(!showPassword)} className={`font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none uppercase ${currentTheme.accent}`}>
