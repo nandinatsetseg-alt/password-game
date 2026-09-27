@@ -4,8 +4,64 @@ import { useEffect, useMemo, useState } from "react";
 
 export default function Home() {
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(true);
+  // Add near the top component:
+
+  const [isBreached, setIsBreached] = useState(null); // null = not checked yet, true/false after
+
+  const [checkingBreach, setCheckingBreach] = useState(false);
+
+  useEffect(() => {
+    if (!password) {
+      setIsBreached(null);
+
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setCheckingBreach(true);
+
+      try {
+        const encoder = new TextEncoder();
+
+        const data = encoder.encode(password);
+
+        const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+        const hashHex = hashArray
+          .map((b) => b.toString(16).padStart(2, "0"))
+
+          .join("")
+
+          .toUpperCase();
+
+        const prefix = hashHex.slice(0, 5);
+
+        const suffix = hashHex.slice(5);
+
+        const res = await fetch(
+          `https://api.pwnedpasswords.com/range/${prefix}`,
+        );
+
+        const text = await res.text();
+
+        const found = text
+          .split("\r\n")
+
+          .some((line) => line.split(":")[0] === suffix);
+
+        setIsBreached(found);
+      } catch (e) {
+        setIsBreached(null); // fail open â€” don't block on network errors
+      } finally {
+        setCheckingBreach(false);
+      }
+    }, 600); // debounce: wait 600ms after typing stops
+
+    return () => clearTimeout(timeout);
+  }, [password]);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -80,8 +136,24 @@ export default function Home() {
 
         passed: password.toLowerCase().includes("please"),
       },
+      {
+        id: 8,
+        title: "Must include the Mongolian word for banana",
+        passed:
+          password.toLowerCase().includes("гадил") ||
+          password.toLowerCase().includes("банана"),
+      },
+      {
+        id: 9,
+
+        title: checkingBreach
+          ? "Checking if this password has been breached..."
+          : "Must NOT be a password found in a known data breach",
+
+        passed: isBreached === false,
+      },
     ];
-  }, [password]);
+  }, [password, isBreached, checkingBreach]);
 
   const firstFailingIndex = rulesList.findIndex((r) => !r.passed);
 
