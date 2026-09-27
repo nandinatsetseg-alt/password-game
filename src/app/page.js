@@ -192,14 +192,19 @@ export default function Home() {
             </span>
           </div>
           <div className="relative flex items-center">
-            <input
-              className={`w-full border-4 p-3 pr-28 font-['VT323'] text-2xl outline-none transition-colors ${currentTheme.input}`}
+              <input className={`w-full border-4 p-3 pr-44 font-['VT323'] text-2xl outline-none transition-colors ${currentTheme.input}`}
               type={showPassword ? "text" : "password"}
               placeholder="Enter Your Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button onClick={() => setShowPassword(!showPassword)} className={`absolute right-2 font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase ${currentTheme.accent}`}>{showPassword ? "HIDE" : "SHOW"}</button>
+              onChange={(e) => setPassword(e.target.value)}/>
+              <div className="absolute right-2 flex space-x-1">
+                  <button onClick={() => {setPassword(""); setPrevPassedCount(0);}} className="font-['Press_Start_2P'] text-[9px] bg-red-400 hover:bg-red-300 text-black border-2 border-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase" title="Reset Password">
+                        RESET
+                  </button>
+                  <button onClick={() => setShowPassword(!showPassword)} className={`font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none uppercase ${currentTheme.accent}`}>
+                    {showPassword ? "HIDE" : "SHOW"}
+                  </button>
+              </div>
           </div>
           <div className="mt-4">
               <div className="flex justify-between items-center mb-1 text-xs font-['Press_Start_2P']">
