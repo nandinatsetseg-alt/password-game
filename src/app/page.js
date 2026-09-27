@@ -1,106 +1,187 @@
 "use client";
-import { Unlock } from "next/font/google";
+
 import { useEffect, useMemo, useState } from "react";
 
 export default function Home() {
   const [password, setPassword] = useState("");
-  const rule_1 = (/[a-z]/.test(password))
-  const rule_2 = rule_1 &&(/[0-9]/.test(password))
-  const rule_3 = rule_2 && (/[A-Z]/.test(password))
-  const rule_4 = rule_3 && password.length>=20
-  const rule_5 = rule_4 && hasNumberEveryFiveChars(password)
-  const rule_6 = rule_5 && hasUpperCaseEveryThreeChars(password)
-  const rule_7 = rule_6 && password.toLowerCase().includes("p") && password.toLowerCase().includes("l") && password.toLowerCase().includes("e") && password.toLowerCase().includes("a") && password.toLowerCase().includes("s") && password.toLowerCase().includes("e")
+
+  const [showPassword, setShowPassword] = useState(true);
+
   useEffect(() => {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap';
-    link.rel = 'stylesheet';
+    const link = document.createElement("link");
+
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap";
+
+    link.rel = "stylesheet";
+
     document.head.appendChild(link);
+
     return () => {
-      if (document.head.contains(link)) {
-        document.head.removeChild(link)
-      };
-    }
-  }, [])
+      if (document.head.contains(link)) document.head.removeChild(link);
+    };
+  }, []);
+
   const rulesList = useMemo(() => {
     return [
       {
         id: 1,
+
         title: "Must include at least one lowercase letter",
-        passed: rule_1,
-        unlocked: password,
+
+        passed: /[a-z]/.test(password),
       },
+
       {
         id: 2,
+
         title: "Must include at least one number",
-        passed: rule_2,
-        unlocked: rule_1
+
+        passed: /[0-9]/.test(password),
       },
+
       {
         id: 3,
+
         title: "Must include at least one uppercase letter",
-        passed: rule_3,
-        unlocked: rule_2
+
+        passed: /[A-Z]/.test(password),
       },
+
       {
-        id:4,
+        id: 4,
+
         title: "Must be at least 20 characters long",
-        passed: rule_4,
-        unlocked: rule_3
+
+        passed: password.length >= 20,
       },
+
       {
-        id:5,
+        id: 5,
+
         title: "Must include a number in every 5 characters :p",
-        passed: rule_5,
-        unlocked: rule_4
+
+        passed: hasNumberEveryFiveChars(password),
       },
+
       {
-        id:6,
-        title: "Must include an uppercase letter in every 3 characters after the 15th character ",
-        passed:rule_6,
-        unlocked: rule_5
+        id: 6,
+
+        title:
+          "Must include an uppercase letter in every 3 characters after the 15th character",
+
+        passed: hasUpperCaseEveryThreeChars(password),
       },
+
       {
-        id:7,
+        id: 7,
+
         title: "Must include the word 'please' because manners matter",
-        passed: rule_7,
-        unlocked: rule_6
-      }
-    ]
-  })
+
+        passed: password.toLowerCase().includes("please"),
+      },
+    ];
+  }, [password]);
+
+  const firstFailingIndex = rulesList.findIndex((r) => !r.passed);
+
+  const visibleCount =
+    firstFailingIndex === -1 ? rulesList.length : firstFailingIndex + 1;
+
+  // Newest/currently-failing rule on top, like the styled version's activeRules.
+
+  const visibleRules = rulesList.slice(0, visibleCount).slice().reverse();
+
+  const passedCount = rulesList.filter((r) => r.passed).length;
+
   return (
-    <div className="flex flex-col justify-center items-center w-full bg-beige">
-      <div className="flex flex-col">
-        <h1>The Password Game</h1>
-        <p>Password</p>
-        <input className="w-full" placeholder="Enter Your Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+    <div className="flex flex-col justify-start p-4 items-center w-full min-h-screen bg-[#f7eed3] text-black font-[VT323] sm:p-8 selection:bg-[#e6c875]">
+      <div className="w-full max-w-xl space-y-5">
+        <div className="bg-yellow-200 border-4 border-black p-5 shadow-[4px_4px_0px_0px_#000] text-center">
+          <h1 className="font-['Press_Start_2P'] text-lg sm:text-xl text-black uppercase mb-1">
+            The Password Game
+          </h1>
+          <p className="text-xl text-brown-300">
+            {passedCount} / {rulesList.length} rules passed
+          </p>
+        </div>
+
+        <div className="bg-amber-50 border-4 border-black p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000]">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-['Press_Start_2P'] text-[9px] text-black px-2 py-0.5 border-2 border-black bg-gray-100">
+              Length: {password.length}
+            </span>
+          </div>
+          <div className="relative flex items-center">
+            <input
+              className="w-full bg-gray-100 border-4 border-black p-3 pr-28 font-['VT323'] text-2xl text-black outline-none focus:bg-amber-100"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter Your Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase"
+            >
+              {showPassword ? "HIDE" : "SHOW"}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {visibleRules.map((rule) => {
+            const isFailing = !rule.passed;
+
+            return (
+              <div
+                key={rule.id}
+                className={`border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000] transition-all ${
+                  isFailing
+                    ? "bg-[#ffdede] border-red-900 text-[#500]"
+                    : "bg-[#d8f3dc] border-green-900 text-[#050]"
+                }`}
+              >
+                <div className="flex items-center justify-between border-b-2 border-black/20 pb-2 mb-2">
+                  <div className="font-['Press_Start_2P'] text-[10px] sm:text-xs flex items-center space-x-1">
+                    <span>{rule.title}</span>
+                  </div>
+                  <div
+                    className={`font-['Press_Start_2P'] text-[9px] px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase ${
+                      isFailing
+                        ? "bg-[#e63946] text-white"
+                        : "bg-[#2ec4b6] text-black"
+                    }`}
+                  >
+                    {isFailing ? "FAIL" : "PASS"}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      {rulesList.map((rule) => {
-        return (
-        rule.unlocked && !rule.passed && (
-          <div className={`${rule.passed ? "text-green-500" : "text-red-500"}`} key={rule.id}>{rule.title}</div>
-        ))
-      })}
     </div>
   );
 }
 
 const hasNumberEveryFiveChars = (password) => {
-  for (let i= 0; i<password.length; i+=5) {
-    const chunk = password.slice(i, i+5)
-    if (!/[0-9]/.test(chunk)) {
-      return false
-    }
+  for (let i = 0; i < password.length; i += 5) {
+    const chunk = password.slice(i, i + 5);
+
+    if (!/[0-9]/.test(chunk)) return false;
   }
-  return true
-}
+
+  return true;
+};
 
 const hasUpperCaseEveryThreeChars = (password) => {
-  for (let i= 15; i<password.length; i+=3) {
-    const chump = password.slice(i, i+3)
-    if (!/[A-Z]/.test(chump)) {
-      return false
-    }
+  for (let i = 15; i < password.length; i += 3) {
+    const chunk = password.slice(i, i + 3);
+
+    if (!/[A-Z]/.test(chunk)) return false;
   }
-  return true
-}
+
+  return true;
+};
