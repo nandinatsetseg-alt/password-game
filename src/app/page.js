@@ -10,6 +10,7 @@ export default function Home() {
   const rule_4 = rule_3 && password.length>=20
   const rule_5 = rule_4 && hasNumberEveryFiveChars(password)
   const rule_6 = rule_5 && hasUpperCaseEveryThreeChars(password)
+  const rule_7 = rule_6 && password.toLowerCase().includes("p") && password.toLowerCase().includes("l") && password.toLowerCase().includes("e") && password.toLowerCase().includes("a") && password.toLowerCase().includes("s") && password.toLowerCase().includes("e")
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap';
