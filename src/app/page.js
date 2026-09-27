@@ -79,7 +79,7 @@ export default function Home() {
     ];
   });
   const activeRules = useMemo(() => {
-    return rulesList.filter((rev) => rev.unlocked).slice().reverse;
+    return rulesList.filter((rev) => rev.unlocked).slice().reverse();
   }, [rulesList]);
   const passedCount = rulesList.filter((rev) => rev.passed).length;
   return (
@@ -105,19 +105,30 @@ export default function Home() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button onClick={() => setShowPassword(!showPassword)}></button>
+            <button onClick={() => setShowPassword(!showPassword)} className="absolute right-2 font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase">{showPassword ? "HIDE" : "SHOW"}</button>
           </div>
         </div>
-        {rulesList.map((rule) => {
-          return (
-            rule.unlocked &&
-            !rule.passed && (
-              <div className="text-red-800" key={rule.id}>
-                {rule.title}
-              </div>
+        <div className="space-y-4">
+          {activeRules.map((rule) => {
+            const isFailing = !rule.passed;
+            return (
+              <div key={rule.id} className={`border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000] transition-all ${
+                isFailing ? "bg-[#ffdede] border-red-900 text-[#500]" : "bg-[#d8f3dc] border-green-900 text-[#050]"
+              }`}>
+                <div className="flex items-center justify-between border-b-2 border-black/20 pb-2 mb-2">
+                  <div className="font-['Press_Start_2P'] text-[10px] sm:text-xs flex items-center space-x-1">
+                    <span>{rule.title}</span>
+                  </div>
+                  <div className={`font-['Press_Start_2P' text-[9px] px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase ${
+                    isFailing ? "bg-[#e63946] text-white" : "bg-[#2ec4b6] text-black"
+                  }`}>
+                    {isFailing ? "FAIL": "PASS"}
+                  </div>
+                </div>
+               </div> 
             )
-          );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );
