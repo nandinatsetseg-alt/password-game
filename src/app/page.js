@@ -1,5 +1,4 @@
 "use client";
-import { Unlock } from "next/font/google";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 export default function Home() {
@@ -10,7 +9,9 @@ export default function Home() {
   const [keystrokes, setKeystrokes ] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
+  const [reaction, setReaction] = useState("Enter your password...")
   const [bestScore, setBestScore] = useState(null);
+  const [scoreChanged, setScoreChanged] = useState(false);
   const rule_1 = /[a-z]/.test(password);
   const rule_2 = rule_1 && /[0-9]/.test(password);
   const rule_3 = rule_2 && /[A-Z]/.test(password);
@@ -168,6 +169,37 @@ export default function Home() {
       },
    ]
    useEffect(() => {
+    if (!password) {
+      setReaction("Enter your password...");
+      return;
+    }
+    if (passedCount === 8) {
+      setReaction("YOU DID IT?! CONGRATS");
+      return;
+    }
+    if (password.length >= 100) {
+      setReaction("PLEASE STOP. THIS IS A PASSWORD.");
+      return
+    }
+    if (password.length >= 50) {
+      setReaction("This password is becoming a novel...");
+      return;
+    }
+    if (passedCount >= 6) {
+      setReaction("Okay. You're actually good at this.");
+      return;
+    }
+    if (passedCount >= 4) {
+      setReaction("It gets worse from here.");
+      return;
+    }
+    if (passedCount >= 2) {
+      setReaction("Not bad. Keep going!");
+      return;
+    }
+    setReaction("Let's see what you've got.");
+   }, [password, passedCount])
+   useEffect(() => {
     let interval;
     if (gameStarted && passedCount < 8) {
       interval = setInterval(() => {
@@ -185,7 +217,7 @@ export default function Home() {
     setPrevPassedCount(passedCount);
    }, [passedCount, password, prevPassedCount])
    useEffect(() => {
-    if (passedCount === 8) {
+    if (passedCount !== 8 || !gameStarted) return; 
       confetti({
         particleCount:150,
         spread: 100,
@@ -193,15 +225,41 @@ export default function Home() {
         colors: ['#e6c875', '#2ec4b6', '#e63946', '#ffd166', '#06d6a0']
       });
       const finalTime = Math.max(1, seconds);
-      const newScore = { time: finalTime, keys: keystrokes};
-      const saved = localStorage.getItem("password_game_best");
-      const currentBest = saved ? JSON.parse(saved) : null;
-      if (!currentBest || finalTime < currentBest.time) {
-        localStorage.setItem("password_game_best", JSON.stringify(newScore));
-        setBestScore(newScore);
-      }
+      const finalScore = Math.max(
+        0, (passedCount * 1000) - (finalTime * 50) - (keystrokes * 10)
+      );
+      const newScores = {
+        score: finalScore,
+        time: finalTime,
+        keys: keystrokes,
+      };
+      try {
+        const saved = localStorage.getItem("password_game_best");
+        const currentBest = saved ? JSON.parse(saved) : null;
+        if (!currentBest || finalScore > currentBest.score) {
+          localStorage.setItem(
+            "password_game_best",
+            JSON.stringify(newScores)
+          );
+          setBestScore(newScores);
+        } else {
+          setBestScore(currentBest); }
+        } catch (error) { 
+          console.error("Could not save best score:", error);
+      setBestScore(newScores);
     }
-   }, [passedCount, rulesList.length, gameStarted, seconds, keystrokes]);
+   }, [passedCount, gameStarted]);
+   const score = Math.max(0,
+    (passedCount * 1000) - (seconds * 50) - (keystrokes * 10)
+  );
+  useEffect(() => {
+    if (passedCount === 0) return;
+    setScoreChanged(true);
+    const timer = setTimeout(() => {
+      setScoreChanged(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [passedCount])
    const currentTheme = themes[Math.min(passedCount, themes.length - 1)];
   return (
     <div className={`flex flex-col justify-start p-4 items-center w-full min-h-screen text-black font-[VT323] sm:p-8 selection:bg-[#e6c875] transition-colors duration-700 ${currentTheme.bg}`}>
@@ -213,9 +271,10 @@ export default function Home() {
           <p className="text-xl text-brown-300">Goodluck!</p>
         </div>
         <div className={`border-4 p-3 shadow-[4px_4px_0px_0px_#000] flex justify-around text-xs sm:text-sm font-['Press_Start_2P'] ${currentTheme.card}`}>
-          <div>TIME: {seconds}s</div>
+          <div className={seconds >= 30 ? "text-red-500 animate-pulse" : ""}>TIME: {seconds}s</div>
           <div>KEYS: {keystrokes}</div>
-          <div>BEST: {bestScore ? `${bestScore.time}s` : "--"}</div>
+          <div className={`transition-all duration-200 ${scoreChanged ? "scale-125 text-green-500" : "scale-100"}`}>SCORE: {score}</div>
+          <div>BEST: {bestScore ? bestScore.score : "--"}</div>
         </div>
         <div className={` border-4 p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] transition-colors duration-500 ${currentTheme.card} ${isShaking ? "animate-shake" : ""}`}>
           <div className="flex justify-between items-center mb-2">
@@ -224,7 +283,7 @@ export default function Home() {
             </span>
           </div>
           <div className="relative flex items-center">
-              <input className={`w-full border-4 p-3 pr-44 font-['VT323'] text-2xl outline-none transition-colors ${currentTheme.input}`}
+              <input className={`w-full border-4 p-3 pr-44 font-['VT323'] text-2xl outline-none transition-all duration-300 ${showPassword ? "blur-0" : "blur-[3px]"} ${currentTheme.input}`}
               type={showPassword ? "text" : "password"}
               placeholder="Enter Your Password"
               value={password}
@@ -235,10 +294,10 @@ export default function Home() {
                 }
               }/>
               <div className="absolute right-2 flex space-x-1">
-                  <button onClick={() => {setPassword(""); setPrevPassedCount(0); setGameStarted(false); setSeconds(0); setKeystrokes(0)}} className="font-['Press_Start_2P'] text-[9px] bg-red-400 hover:bg-red-300 text-black border-2 border-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase" title="Reset Password">
+                  <button onClick={() => {setPassword(""); setPrevPassedCount(0); setGameStarted(false); setSeconds(0); setKeystrokes(0); setScoreChanged(false);}} className="font-['Press_Start_2P'] text-[9px] bg-red-400 hover:bg-red-300 text-black border-2 border-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none select-none uppercase" title="Reset Password">
                         RESET
                   </button>
-                  <button onClick={() => setShowPassword(!showPassword)} className={`font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none uppercase ${currentTheme.accent}`}>
+                  <button onClick={() => setShowPassword(!showPassword)} className={`font-['Press_Start_2P'] text-[9px] bg-[#e6c875] hover:bg-[#d8b863] text-black border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] active:translate-y-[1px] active:shadow-none uppercase transition-all duration-200 ${showPassword ? "scale-100" : "scale-110 rotate-2"} ${currentTheme.accent}`}>
                     {showPassword ? "HIDE" : "SHOW"}
                   </button>
               </div>
@@ -252,6 +311,9 @@ export default function Home() {
           <div className="w-full h-4 bg-black/20 border-2 border-black p-0.5 overflow-hidden">
             <div className={`h-full transition-all duration-500 ${passedCount === rulesList.length ? "bg-green-400 animate-pulse " : currentTheme.accent || "bg-yellow-400"}`} style={{width: `${progressPercentage}%`}}>
           </div>
+          </div>
+          <div className="mt-4 text-center">
+            <div className={`inline-block border-2 border-black px-4 py-2 font-['Press_Start_2P'] text-[9px] sm:text-[10px] shadow-[3px_3px_0px_0px_#000] transition-all duration-300 ${passedCount === 8 ? "bg-green-300 animate-bounce" : passedCount >= 6 ? "bg-yellow-200" : "bg-white"}`}>{reaction}</div>
           </div>
         </div>
         <div>
