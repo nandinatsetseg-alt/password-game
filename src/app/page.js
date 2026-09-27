@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 export default function Home() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(true);
+  const [isShaking, setIsShaking] = useState(false);
+  const [prevPassedCount, setPrevPassedCount] = useState(0);
   const rule_1 = /[a-z]/.test(password);
   const rule_2 = rule_1 && /[0-9]/.test(password);
   const rule_3 = rule_2 && /[A-Z]/.test(password);
@@ -32,7 +34,6 @@ export default function Home() {
       }
     };
   }, []);
-
   const rulesList = useMemo(() => {
     return [
       {
@@ -156,6 +157,14 @@ export default function Home() {
         accent: "bg-amber-400 hover:bg-amber-300 text-amber-950"
       },
    ]
+   useEffect(() => {
+    if (passedCount<prevPassedCount && password.length > 0) {
+      setIsShaking(true);
+      const timer = setTimeout(() => setIsShaking(false), 300);
+      return () => clearTimeout(timer);
+    }
+    setPrevPassedCount(passedCount);
+   }, [passedCount, password])
    const currentTheme = themes[Math.min(passedCount, themes.length - 1)];
   return (
     <div className={`flex flex-col justify-start p-4 items-center w-full min-h-screen text-black font-[VT323] sm:p-8 selection:bg-[#e6c875] transition-colors duration-700 ${currentTheme.bg}`}>
@@ -166,7 +175,7 @@ export default function Home() {
           </h1>
           <p className="text-xl text-brown-300">Goodluck!</p>
         </div>
-        <div className={` border-4 p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] transition-colors duration-500 ${currentTheme.card}`}>
+        <div className={` border-4 p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] transition-colors duration-500 ${currentTheme.card} ${isShaking ? "animate-shake" : ""}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="font-['Press_Start_2P'] text-[9px] text-black px-2 py-0.5 border-2 border-black bg-gray-100">
               Length: {password.length}
