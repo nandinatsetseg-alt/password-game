@@ -10,6 +10,7 @@ export default function Home() {
   const rule_4 = rule_3 && password.length>=20
   const rule_5 = rule_4 && hasNumberEveryFiveChars(password)
   const rule_6 = rule_5 && hasUpperCaseEveryThreeChars(password)
+  const rule_7 = rule_6 && password.toLowerCase().includes("p") && password.toLowerCase().includes("l") && password.toLowerCase().includes("e") && password.toLowerCase().includes("a") && password.toLowerCase().includes("s") && password.toLowerCase().includes("e")
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap';
@@ -27,7 +28,7 @@ export default function Home() {
         id: 1,
         title: "Must include at least one lowercase letter",
         passed: rule_1,
-        unlocked: true,
+        unlocked: password,
       },
       {
         id: 2,
@@ -41,7 +42,30 @@ export default function Home() {
         passed: rule_3,
         unlocked: rule_2
       },
-      {}
+      {
+        id:4,
+        title: "Must be at least 20 characters long",
+        passed: rule_4,
+        unlocked: rule_3
+      },
+      {
+        id:5,
+        title: "Must include a number in every 5 characters :p",
+        passed: rule_5,
+        unlocked: rule_4
+      },
+      {
+        id:6,
+        title: "Must include an uppercase letter in every 3 characters after the 15th character ",
+        passed:rule_6,
+        unlocked: rule_5
+      },
+      {
+        id:7,
+        title: "Must include the word 'please' because manners matter",
+        passed: rule_7,
+        unlocked: rule_6
+      }
     ]
   })
   return (
@@ -51,26 +75,12 @@ export default function Home() {
         <p>Password</p>
         <input className="w-full" placeholder="Enter Your Password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
-      {password && <div className="text-red-800">
-        {!rule_1 && <div>Must include a lowercase letter</div>}
-      </div>}
-      {rule_1 && <div className="text-red-800">  
-        {!rule_2 && <div>Must include a number</div>}
-      </div>}
-      {rule_2 && <div className="text-red-800">
-        {(!rule_3) && <div>Must include an uppercase letter</div>}
-      </div>
-      }
-      {rule_3 && <div className="text-red-800">
-        {(!rule_4) && <div>Must be at least 20 characters</div>}
-      </div>
-      }
-      {rule_4 && <div className="text-red-800">
-        {!rule_5 && <div>Must include a number every five characters btw :p</div>}
-        </div>}
-      {rule_5 && <div className="text-red-800">
-        {!rule_6 && <div>Must include an uppercase letter every 3 character after the 15th character</div>}
-        </div>}
+      {rulesList.map((rule) => {
+        return (
+        rule.unlocked && !rule.passed && (
+          <div className="text-red-800" key={rule.id}>{rule.title}</div>
+        ))
+      })}
     </div>
   );
 }
