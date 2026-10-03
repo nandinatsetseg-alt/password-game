@@ -2,65 +2,78 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+const hasNumberEveryFiveChars = (password) => {
+  for (let i = 0; i < password.length; i += 5) {
+    const chunk = password.slice(i, i + 5);
+    if (!/[0-9]/.test(chunk)) return false;
+  }
+  return true;
+};
+
+const hasUpperCaseEveryThreeChars = (password) => {
+  for (let i = 15; i < password.length; i += 3) {
+    const chunk = password.slice(i, i + 3);
+    if (!/[A-Z]/.test(chunk)) return false;
+  }
+  return true;
+};
+
 export default function Home() {
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(true);
-  // Add near the top component:
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [isBreached, setIsBreached] = useState(null); // null = not checked yet, true/false after
-
+  const [isBreached, setIsBreached] = useState(null);
   const [checkingBreach, setCheckingBreach] = useState(false);
+  const [breachError, setBreachError] = useState(false);
 
   useEffect(() => {
-    if (!password) {
-      setIsBreached(null);
+    setIsBreached(null);
+    setBreachError(false);
 
+    if (!password) {
+      setCheckingBreach(false);
       return;
     }
 
+    const controller = new AbortController();
+    setCheckingBreach(true);
+
     const timeout = setTimeout(async () => {
-      setCheckingBreach(true);
-
       try {
-        const encoder = new TextEncoder();
-
-        const data = encoder.encode(password);
-
+        const data = new TextEncoder().encode(password);
         const hashBuffer = await crypto.subtle.digest("SHA-1", data);
-
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-        const hashHex = hashArray
+        const hashHex = Array.from(new Uint8Array(hashBuffer))
           .map((b) => b.toString(16).padStart(2, "0"))
-
           .join("")
-
           .toUpperCase();
 
         const prefix = hashHex.slice(0, 5);
-
         const suffix = hashHex.slice(5);
 
         const res = await fetch(
           `https://api.pwnedpasswords.com/range/${prefix}`,
+          { signal: controller.signal },
         );
+        if (!res.ok) throw new Error("breach check failed");
 
         const text = await res.text();
-
         const found = text
-          .split("\r\n")
-
+          .split(/\r?\n/)
           .some((line) => line.split(":")[0] === suffix);
 
         setIsBreached(found);
       } catch (e) {
-        setIsBreached(null); // fail open â€” don't block on network errors
+        if (e.name === "AbortError") return;
+        setBreachError(true);
       } finally {
-        setCheckingBreach(false);
+        if (!controller.signal.aborted) setCheckingBreach(false);
       }
-    }, 600); // debounce: wait 600ms after typing stops
+    }, 600);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [password]);
 
   useEffect(() => {
@@ -68,9 +81,7 @@ export default function Home() {
 
     link.href =
       "https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap";
-
     link.rel = "stylesheet";
-
     document.head.appendChild(link);
 
     return () => {
@@ -79,61 +90,47 @@ export default function Home() {
   }, []);
 
   const rulesList = useMemo(() => {
+    let rule9Title = "Must NOT be a password found in a known data breach";
+    if (checkingBreach)
+      rule9Title = "Checking if this password has been breached";
+    else if (breachError)
+      rule9Title = "Couldn't reach the database, skipping this rule";
+
     return [
       {
         id: 1,
-
         title: "Must include at least one lowercase letter",
-
         passed: /[a-z]/.test(password),
       },
-
       {
         id: 2,
-
         title: "Must include at least one number",
-
         passed: /[0-9]/.test(password),
       },
-
       {
         id: 3,
-
         title: "Must include at least one uppercase letter",
-
         passed: /[A-Z]/.test(password),
       },
-
       {
         id: 4,
-
         title: "Must be at least 20 characters long",
-
         passed: password.length >= 20,
       },
-
       {
         id: 5,
-
         title: "Must include a number in every 5 characters :p",
-
         passed: hasNumberEveryFiveChars(password),
       },
-
       {
         id: 6,
-
         title:
           "Must include an uppercase letter in every 3 characters after the 15th character",
-
         passed: hasUpperCaseEveryThreeChars(password),
       },
-
       {
         id: 7,
-
         title: "Must include the word 'please' because manners matter",
-
         passed: password.toLowerCase().includes("please"),
       },
       {
@@ -145,26 +142,20 @@ export default function Home() {
       },
       {
         id: 9,
-
-        title: checkingBreach
-          ? "Checking if this password has been breached..."
-          : "Must NOT be a password found in a known data breach",
-
-        passed: isBreached === false,
+        title: rule9Title,
+        passed: !checkingBreach && (breachError || isBreached === false),
       },
     ];
-  }, [password, isBreached, checkingBreach]);
+  }, [password, isBreached, checkingBreach, breachError]);
 
   const firstFailingIndex = rulesList.findIndex((r) => !r.passed);
-
   const visibleCount =
     firstFailingIndex === -1 ? rulesList.length : firstFailingIndex + 1;
 
-  // Newest/currently-failing rule on top, like the styled version's activeRules.
+  const visibleRules = rulesList.slice(0, visibleCount).reverse();
 
-  const visibleRules = rulesList.slice(0, visibleCount).slice().reverse();
-
-  const passedCount = rulesList.filter((r) => r.passed).length;
+  const passedCount =
+    firstFailingIndex === -1 ? rulesList.length : firstFailingIndex;
 
   return (
     <div className="flex flex-col justify-start p-4 items-center w-full min-h-screen bg-[#f7eed3] text-black font-[VT323] sm:p-8 selection:bg-[#e6c875]">
@@ -173,7 +164,7 @@ export default function Home() {
           <h1 className="font-['Press_Start_2P'] text-lg sm:text-xl text-black uppercase mb-1">
             The Password Game
           </h1>
-          <p className="text-xl text-brown-300">
+          <p className="text-xl text-amber-900">
             {passedCount} / {rulesList.length} rules passed
           </p>
         </div>
@@ -237,23 +228,3 @@ export default function Home() {
     </div>
   );
 }
-
-const hasNumberEveryFiveChars = (password) => {
-  for (let i = 0; i < password.length; i += 5) {
-    const chunk = password.slice(i, i + 5);
-
-    if (!/[0-9]/.test(chunk)) return false;
-  }
-
-  return true;
-};
-
-const hasUpperCaseEveryThreeChars = (password) => {
-  for (let i = 15; i < password.length; i += 3) {
-    const chunk = password.slice(i, i + 3);
-
-    if (!/[A-Z]/.test(chunk)) return false;
-  }
-
-  return true;
-};
