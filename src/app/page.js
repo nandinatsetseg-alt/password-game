@@ -29,6 +29,7 @@ export default function Home() {
     password.toLowerCase().includes("s") &&
     password.toLowerCase().includes("e");
     const rule_8 = rule_7 && /(I|V|X|L|C|D|M){2,}/.test(password);
+    const rule_9 = rule_8 && hasGreekLetter(password);
   useEffect(() => {
     const link = document.createElement("link");
     link.href =
@@ -98,8 +99,14 @@ export default function Home() {
         passed: rule_8,
         unlocked: rule_7,
       },
+      {
+        id: 9,
+        title: "Must include a greek letter spelled out",
+        passed: rule_9,
+        unlocked: rule_8,
+      },
     ];
-  }, [rule_1, rule_2, rule_3, rule_4, rule_5, rule_6, rule_7, rule_8, password]);
+  }, [rule_1, rule_2, rule_3, rule_4, rule_5, rule_6, rule_7, rule_8, rule_9, password]);
   const activeRules = useMemo(() => {
     return rulesList.filter((rev) => rev.unlocked).slice().reverse();
   }, [rulesList]);
@@ -175,7 +182,7 @@ export default function Home() {
       setReaction("Enter your password...");
       return;
     }
-    if (passedCount === 8) {
+    if (passedCount === 9) {
       setReaction("YOU DID IT?! CONGRATS");
       return;
     }
@@ -384,3 +391,10 @@ const hasUpperCaseEveryThreeChars = (password) => {
   }
   return true;
 };
+ 
+const greekLetters = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega"]
+
+const hasGreekLetter = (password) => {
+  const lower = password.toLowerCase();
+  return greekLetters.some((letter) => lower.includes(letter));
+}
