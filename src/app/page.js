@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
+import Link from "next/link";
 export default function Home() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(true);
@@ -11,6 +12,7 @@ export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
   const [reaction, setReaction] = useState("Enter your password...")
   const [bestScore, setBestScore] = useState(null);
+  const [isVisible, setIsvisible] = useState(false);
   const [scoreChanged, setScoreChanged] = useState(false);
   const rule_1 = /[a-z]/.test(password);
   const rule_2 = rule_1 && /[0-9]/.test(password);
@@ -264,6 +266,19 @@ export default function Home() {
   return (
     <div className={`flex flex-col justify-start p-4 items-center w-full min-h-screen text-black font-[VT323] sm:p-8 selection:bg-[#e6c875] transition-colors duration-700 ${currentTheme.bg}`}>
       <div className="w-full max-w-xl space-y-5">
+        <div>
+        <div>
+          <div className="text-xl px-4 py-2 border-black shadow-[4px_4px_0px_0px_#000] cursor-pointer uppercase bg-amber-300 border-3" onClick={() => setIsvisible(!isVisible)}>Other mini games</div>
+        </div>
+        {isVisible && (
+          <div>
+            <div className="flex flex-col space-y-3 mt-2 text-l">
+              <Link className="p-2 border-2 border-black bg-white/50 cursor-pointer hover:bg-black/10" href="/tic-tac-toe">Tic-Tac-Toe</Link>
+              <Link className="p-2 border-2 border-black bg-white/50 cursor-pointer hover:bg-black/10" href="/memory-game">Memory Game</Link>
+            </div>
+          </div>
+        )}
+        </div>
         <div className={`border-4 p-5 shadow-[4px_4px_0px_0px_#000] text-center transition-colors duration-500 ${currentTheme.header}`}>
           <h1 className="font-['Press_Start_2P'] text-lg sm:text-xl uppercase mb-1">
             The Password Game
