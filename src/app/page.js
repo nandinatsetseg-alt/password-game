@@ -28,8 +28,13 @@ export default function Home() {
     password.toLowerCase().includes("a") &&
     password.toLowerCase().includes("s") &&
     password.toLowerCase().includes("e");
-    const rule_8 = rule_7 && /(I|V|X|L|C|D|M){2,}/.test(password);
-    const rule_9 = rule_8 && hasGreekLetter(password);
+  const rule_8 = rule_7 && /(I|V|X|L|C|D|M){2,}/.test(password);
+  const rule_9 = rule_8 && hasGreekLetter(password);
+  const rule_10 = rule_9 && lowercaseEqualsDigits(password);
+  const rule_11 = rule_10 && hasLeaderChar(password);
+  
+  
+  
   useEffect(() => {
     const link = document.createElement("link");
     link.href =
@@ -105,8 +110,20 @@ export default function Home() {
         passed: rule_9,
         unlocked: rule_8,
       },
+      {
+        id:10,
+        title: "Must have an equal number of lowercase letters and digits",
+        passed: rule_10,
+        unlocked: rule_9
+      },
+      {
+        id:11,
+        title: "Must have a leader character that doesn't repeat anywhere else",
+        passed: rule_11,
+        unlocked: rule_10
+      },
     ];
-  }, [rule_1, rule_2, rule_3, rule_4, rule_5, rule_6, rule_7, rule_8, rule_9, password]);
+  }, [rule_1, rule_2, rule_3, rule_4, rule_5, rule_6, rule_7, rule_8, rule_9, rule_10, password]);
   const activeRules = useMemo(() => {
     return rulesList.filter((rev) => rev.unlocked).slice().reverse();
   }, [rulesList]);
@@ -182,7 +199,7 @@ export default function Home() {
       setReaction("Enter your password...");
       return;
     }
-    if (passedCount === 9) {
+    if (passedCount === rulesList.length) {
       setReaction("YOU DID IT?! CONGRATS");
       return;
     }
@@ -226,7 +243,7 @@ export default function Home() {
     setPrevPassedCount(passedCount);
    }, [passedCount, password, prevPassedCount])
    useEffect(() => {
-    if (passedCount !== 8 || !gameStarted) return; 
+    if (passedCount !== rulesList.length || !gameStarted) return; 
       confetti({
         particleCount:150,
         spread: 100,
@@ -398,3 +415,17 @@ const hasGreekLetter = (password) => {
   const lower = password.toLowerCase();
   return greekLetters.some((letter) => lower.includes(letter));
 }
+
+const lowercaseEqualsDigits = (password) => {
+  const lowercaseCount = (password.match(/[a-z]/g) || []).length;
+  const digitCount = (password.match(/[0-9]/g) || []).length;
+  return lowercaseCount === digitCount && lowercaseCount > 0;
+};
+
+const hasLeaderChar = (password) => {
+  const counts ={};
+  for (const char of password) {
+    counts[char] = (counts[char] || 0) +1;
+  }
+  return Object.values(counts).some((count) => count === 1);
+};
