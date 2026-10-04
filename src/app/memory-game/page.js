@@ -80,7 +80,6 @@ export default function MemoryGame() {
                     <div></div>
                     <button onClick={resetGame} className="font-['Press_Start_2P'] text-[10px] px-6 py-3 border-black border-4 bg-red-400 hover:bg-red-300 shadow-[4px_4px_0px_0px_#000] active:translate-y-[1px] active:shadow-none uppercase">Reset Game</button>
                 </div>
-                <input placeholder="Any recommedations are okau"/>
             </div>
         </div>
     )
