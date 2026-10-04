@@ -840,5 +840,227 @@ export default function Home() {
 
     return "Let's see what you've got.";
   }, [password, passedCount, totalRules, allPassed]);
-  return <div></div>;
+  return (
+    <div className={invertActive ? "animate-[invertPulse_6s_infinite]" : ""}>
+      {/* The game uses a couple of small custom animations. */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+        @keyframes wiggle {
+          0%, 100% { transform: rotate(-1.2deg) translateX(-3px); }
+          50% { transform: rotate(1.2deg) translateX(3px); }
+        }
+        @keyframes invertPulse {
+          0%, 82%, 100% { filter: none; }
+          86%, 94% { filter: invert(1); }
+        }
+        @keyframes hueCycle {
+          from { filter: hue-rotate(0deg); }
+          to { filter: hue-rotate(360deg); }
+        }
+      `}</style>
+
+      <div
+        className={`flex flex-col justify-start p-4 items-center w-full min-h-screen font-['VT323'] sm:p-8 transition-colors duration-700 ${currentTheme.bg} ${
+          chaosBackgroundActive ? "animate-[hueCycle_8s_linear_infinite]" : ""
+        }`}
+      >
+        <div className="w-full max-w-xl space-y-5">
+          {/* Title */}
+          <div
+            className={`border-4 p-5 shadow-[4px_4px_0px_0px_#000] text-center transition-colors duration-500 ${currentTheme.header}`}
+          >
+            <h1 className="font-['Press_Start_2P'] text-lg sm:text-xl uppercase mb-1">
+              The Password Game
+            </h1>
+
+            <p className="text-xl">
+              Good luck! {passedCount} / {totalRules} rules passed
+            </p>
+          </div>
+
+          {/* Current score */}
+          <StatsBar
+            seconds={seconds}
+            keystrokes={keystrokes}
+            score={score}
+            bestScore={bestScore}
+            theme={currentTheme}
+            scoreChanged={scoreChanged}
+          />
+
+          {/* Show this when an old game was loaded. */}
+          {restoredBanner && (
+            <div className="bg-blue-100 border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000] flex items-center justify-between">
+              <span className="text-lg">
+                Welcome back! Progress restored ({restoredProgress}/{totalRules}
+                ).
+              </span>
+
+              <button
+                onClick={() => setRestoredBanner(false)}
+                className="font-['Press_Start_2P'] text-[8px] border-2 border-black px-2 py-1 bg-gray-200"
+              >
+                DISMISS
+              </button>
+            </div>
+          )}
+
+          {/* Turn the annoying effects on or off. */}
+          <div
+            className={`border-4 p-3 shadow-[4px_4px_0px_0px_#000] flex items-center justify-between transition-colors duration-500 ${currentTheme.card}`}
+          >
+            <span className="font-['Press_Start_2P'] text-[9px] uppercase">
+              Curses {cursesEnabled ? "ON" : "OFF"}
+            </span>
+
+            <button
+              onClick={() => setCursesEnabled((current) => !current)}
+              className={`font-['Press_Start_2P'] text-[9px] border-2 border-black px-3 py-1.5 shadow-[2px_2px_0px_0px_#000] uppercase ${
+                cursesEnabled
+                  ? "bg-[#e63946] text-white"
+                  : "bg-[#2ec4b6] text-black"
+              }`}
+            >
+              {cursesEnabled ? "Disable" : "Enable"}
+            </button>
+          </div>
+
+          {/* Let the player know which curses are active. */}
+          {activeCurses.length > 0 && (
+            <div className="bg-[#2b0a3d] border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000]">
+              <p className="font-['Press_Start_2P'] text-[9px] text-purple-200 uppercase mb-2">
+                Active Curses
+              </p>
+
+              {activeCurses.map((curse) => (
+                <p key={curse.id} className="text-lg text-purple-100">
+                  <span className="font-bold">{curse.name}:</span>{" "}
+                  {curse.description}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* Main password area */}
+          <div
+            className={`border-4 p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] transition-colors duration-500 ${currentTheme.card} ${
+              isShaking ? "animate-[shake_0.3s]" : ""
+            }`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-['Press_Start_2P'] text-[9px] border-2 border-black bg-gray-100 px-2 py-0.5">
+                Length: {password.length}
+              </span>
+            </div>
+
+            <div
+              className={`relative flex items-center ${
+                wiggleActive ? "animate-[wiggle_0.25s_infinite]" : ""
+              }`}
+            >
+              <input
+                className={`w-full border-4 p-3 pr-44 text-2xl outline-none transition-all duration-300 ${
+                  showPassword ? "blur-0" : "blur-[3px]"
+                } ${currentTheme.input}`}
+                style={
+                  symbolsActive && showPassword
+                    ? {
+                        WebkitTextFillColor: "transparent",
+                      }
+                    : undefined
+                }
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter Your Password"
+                value={password}
+                onChange={handlePasswordChange}
+              />
+
+              {/* Fake text shown when Glyph Glitch is active */}
+              {symbolsActive && showPassword && (
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 flex items-center p-3 pr-44 pointer-events-none text-2xl overflow-hidden whitespace-pre"
+                >
+                  {toCursedGlyphs(password)}
+                </div>
+              )}
+
+              <div className="absolute right-2 flex space-x-1">
+                <button
+                  onClick={resetGame}
+                  className="font-['Press_Start_2P'] text-[9px] bg-red-400 border-2 border-black px-2 py-1.5 shadow-[2px_2px_0px_0px_#000]"
+                >
+                  RESET
+                </button>
+
+                <button
+                  ref={runawayButton}
+                  onClick={() => setShowPassword((current) => !current)}
+                  style={
+                    runawayActive
+                      ? {
+                          transition: "transform 0.12s ease-out",
+                        }
+                      : undefined
+                  }
+                  className={`font-['Press_Start_2P'] text-[9px] border-2 border-black px-2.5 py-1.5 shadow-[2px_2px_0px_0px_#000] ${
+                    showPassword ? "scale-100" : "scale-110 rotate-2"
+                  } ${currentTheme.accent}`}
+                >
+                  {showPassword ? "HIDE" : "SHOW"}
+                </button>
+              </div>
+            </div>
+
+            {/* How far through the rules are we? */}
+            <div className="mt-4">
+              <div className="flex justify-between mb-1 text-xs font-['Press_Start_2P']">
+                <span>Progress</span>
+                <span>{progress}%</span>
+              </div>
+
+              <div className="w-full h-4 bg-black/20 border-2 border-black p-0.5">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    allPassed
+                      ? "bg-green-400 animate-pulse"
+                      : currentTheme.accent
+                  }`}
+                  style={{
+                    width: `${progress}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* A little comment from the game. */}
+            <div className="mt-4 text-center">
+              <div
+                className={`inline-block border-2 border-black px-4 py-2 font-['Press_Start_2P'] text-[9px] shadow-[3px_3px_0px_0px_#000] ${
+                  allPassed ? "bg-green-300 animate-bounce" : "bg-white"
+                }`}
+              >
+                {reaction}
+              </div>
+            </div>
+          </div>
+
+          {/* Only show the rules the player has reached. */}
+          <div className="space-y-4">
+            {visibleRules.map((rule) => (
+              <RuleCard key={rule.id} rule={rule} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
