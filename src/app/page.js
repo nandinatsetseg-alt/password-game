@@ -842,7 +842,7 @@ export default function Home() {
   }, [password, passedCount, totalRules, allPassed]);
   return (
     <div className={invertActive ? "animate-[invertPulse_6s_infinite]" : ""}>
-      {/* The game uses a couple of small custom animations. */}
+      {}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 
@@ -873,7 +873,7 @@ export default function Home() {
         }`}
       >
         <div className="w-full max-w-xl space-y-5">
-          {/* Title */}
+          {}
           <div
             className={`border-4 p-5 shadow-[4px_4px_0px_0px_#000] text-center transition-colors duration-500 ${currentTheme.header}`}
           >
@@ -886,7 +886,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Current score */}
+          {}
           <StatsBar
             seconds={seconds}
             keystrokes={keystrokes}
@@ -896,7 +896,7 @@ export default function Home() {
             scoreChanged={scoreChanged}
           />
 
-          {/* Show this when an old game was loaded. */}
+          {}
           {restoredBanner && (
             <div className="bg-blue-100 border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000] flex items-center justify-between">
               <span className="text-lg">
@@ -913,7 +913,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Turn the annoying effects on or off. */}
+          {}
           <div
             className={`border-4 p-3 shadow-[4px_4px_0px_0px_#000] flex items-center justify-between transition-colors duration-500 ${currentTheme.card}`}
           >
@@ -933,7 +933,7 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Let the player know which curses are active. */}
+          {}
           {activeCurses.length > 0 && (
             <div className="bg-[#2b0a3d] border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000]">
               <p className="font-['Press_Start_2P'] text-[9px] text-purple-200 uppercase mb-2">
@@ -949,7 +949,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Main password area */}
+          {}
           <div
             className={`border-4 p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] transition-colors duration-500 ${currentTheme.card} ${
               isShaking ? "animate-[shake_0.3s]" : ""
@@ -983,7 +983,7 @@ export default function Home() {
                 onChange={handlePasswordChange}
               />
 
-              {/* Fake text shown when Glyph Glitch is active */}
+              {}
               {symbolsActive && showPassword && (
                 <div
                   aria-hidden="true"
@@ -1020,7 +1020,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* How far through the rules are we? */}
+            {}
             <div className="mt-4">
               <div className="flex justify-between mb-1 text-xs font-['Press_Start_2P']">
                 <span>Progress</span>
@@ -1041,7 +1041,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* A little comment from the game. */}
+            {}
             <div className="mt-4 text-center">
               <div
                 className={`inline-block border-2 border-black px-4 py-2 font-['Press_Start_2P'] text-[9px] shadow-[3px_3px_0px_0px_#000] ${
@@ -1053,7 +1053,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Only show the rules the player has reached. */}
+          {}
           <div className="space-y-4">
             {visibleRules.map((rule) => (
               <RuleCard key={rule.id} rule={rule} />
